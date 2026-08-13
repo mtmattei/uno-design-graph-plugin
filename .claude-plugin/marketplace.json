@@ -1,0 +1,20 @@
+{
+  "name": "uno-design-graph",
+  "owner": {
+    "name": "mtmattei",
+    "url": "https://github.com/mtmattei"
+  },
+  "metadata": {
+    "description": "Design Graph tooling for Uno Platform: a semantic intermediate representation between UI designs and XAML implementation.",
+    "version": "0.5.0"
+  },
+  "plugins": [
+    {
+      "name": "design-graph",
+      "source": "./",
+      "description": "Generate a semantic Design Graph from an Uno Platform / WinUI screen, a Figma export, or a screenshot - and implement screens from one.",
+      "version": "0.5.0",
+      "category": "development"
+    }
+  ]
+}
