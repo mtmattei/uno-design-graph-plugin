@@ -1,0 +1,35 @@
+name: check
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  graphs:
+    runs-on: ubuntu-latest
+    env:
+      SKILL: skills/uno-design-graph
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python3 -m pip install -r $SKILL/scripts/requirements.txt
+      - name: Validate and lint example graphs
+        run: |
+          set -e
+          for g in examples/*.graph.json; do
+            python3 $SKILL/scripts/validate_graph.py "$g"
+            python3 $SKILL/scripts/lint_graph.py "$g" --strict
+          done
+      - name: Scorer and diff self-checks
+        run: |
+          set -e
+          python3 $SKILL/scripts/score_graph.py examples/orbital-settings.graph.json examples/orbital-settings.graph.json --fail-on-hallucination
+          python3 $SKILL/scripts/diff_graph.py examples/orbital-settings.graph.json examples/orbital-settings.graph.json
+      - name: Unit tests
+        run: python3 -m unittest discover -s $SKILL/scripts/tests -v
+      - name: Manifests parse
+        run: |
+          python3 -c "import json; json.load(open('.claude-plugin/plugin.json')); json.load(open('.claude-plugin/marketplace.json'))"
