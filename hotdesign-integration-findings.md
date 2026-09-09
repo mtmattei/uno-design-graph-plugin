@@ -276,8 +276,17 @@ Reachable from outside the panel:
 
 ### Conclusion
 
-"Click a node in the graph inspector, highlight it in Hot Design" is a **new, small MCP tool**, not a
-new subsystem: `hotdesign_select_element(element_ref)` resolving `ElementRefHandle.TryResolve` and calling
+Selection-as-context already exists on the Hot Design message bus: `SelectedElementsResponseMessage`
+carries the App MCP handle for each selected element, and `SelectElementsMessage` selects from outside
+the panel. The ElementRef bridge was built so that "an agent receiving a Hot Design selection" can
+target the element in App MCP tools (`specs/messaging/spec.md:1080`); the Studio Live host, which
+supplies the Agent experience in nested mode (`specs/chat/spec.md:107-111`), sits on that bus. Its
+consumer is outside this repo: `git log -S unoRef -- src` finds nothing, and the
+`agent-mode-element-selection` spec the bridge cites is no longer in `specs/chat/`.
+
+What is missing is only the **MCP republication** of that bus traffic, for an agent that is not
+Studio Live. "Click a node in the graph inspector, highlight it in Hot Design" is therefore a **new,
+small MCP tool**, not a new subsystem: `hotdesign_select_element(element_ref)` resolving `ElementRefHandle.TryResolve` and calling
 `IAppInfoProvider.SelectElement`. The reverse direction is a `hotdesign://selection` resource fed from
 `SelectedElementsCollectionChanged`. Until those exist, the only external paths are the in-process event
 and the Hot Design message bus, neither of which a browser page can reach; an agent sitting between the
@@ -291,8 +300,9 @@ Three steps, ordered by what they buy; the first needs no Hot Design change.
    `uno_app_visualtree_snapshot` into a runtime graph; `diff_graph.py` then reports drift on `type`/`xName`
    and shows `styleKey`/`class` as gaps. `runtime-source.md` step 3 becomes mechanical.
 
-2. **Selection bridge over MCP (3-4 files in `uno.hotdesign`).** Surfaces graph semantics next to the
-   Elements tree without a pane: the inspector highlights what Hot Design selects and vice versa.
+2. **Selection bridge over MCP (3-4 files in `uno.hotdesign`).** Republishes the selection the bus
+   already carries so a non-Studio-Live agent can read and drive it: the inspector highlights what Hot
+   Design selects and vice versa. Skip this step if the consuming agent is Studio Live's own.
    - new `src/Uno.UI.HotDesign.Client/Logic/Mcp/HotDesignSelectElementTool.cs` (shape of
      `HotDesignSelectPreviewTool.cs:18-25`);
    - new `Logic/Mcp/SelectionController.cs` reading `IAppInfoProvider.CurrentSelection` and
