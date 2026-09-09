@@ -74,13 +74,19 @@ Finish with Mode 3.
 
 ## Mode 3 — Verify the running app against a graph
 
-Build a runtime graph per
-`${CLAUDE_SKILL_DIR}/references/runtime-source.md` (drive the app with the
-App MCP, snapshot the visual tree, record only what you observed), then:
+Drive the app to the screen and state with the App MCP, save the text of
+`uno_app_visualtree_snapshot` to a file, then build and diff
+(details in `${CLAUDE_SKILL_DIR}/references/runtime-source.md`):
 
 ```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/snapshot_to_graph.py snapshot.txt --design <design>.graph.json -o <runtime>.graph.json
 python3 ${CLAUDE_SKILL_DIR}/scripts/diff_graph.py <design>.graph.json <runtime>.graph.json
 ```
+
+The snapshot carries `uno.type` and `uno.xName` only. `styleKey`,
+`resourceKey`, `class`, states, and tokens always show as drift from a
+snapshot alone; treat those rows as "verify in source or Hot Design", not
+as defects.
 
 Any `missing` or `changed` identity (`uno.type`, `uno.xName`,
 `uno.styleKey`, `uno.resourceKey`, `uno.namespace`) is a round-trip defect.

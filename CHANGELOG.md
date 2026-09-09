@@ -25,6 +25,12 @@ Plugin and skill renamed `design-graph` -> `uno-design-graph` to follow the
   only in prose. ID grammar, relation domains, per-instance token edges,
   style-level state names, unresolved references, confidence thresholds,
   behavior-edge evidence, unconsumed tokens, unattached states.
+- `snapshot_to_graph.py` (new): builds a runtime graph from the text of
+  `uno_app_visualtree_snapshot` (Uno.UI.App.Mcp 1.3.x line grammar). Copies
+  `uno.type` and `uno.xName`, keeps source locators, flags, bindings, and
+  bounds; `--design` adopts the design graph's node types for confirmed
+  `x:Name`s so the diff matches semantic nodes. Ships with a reconstructed
+  fixture, not a live capture.
 - `diff_graph.py` (new): reports Uno-layer drift (`type`, `xName`,
   `styleKey`, `resourceKey`) between two graphs. This is the executable form
   of the round-trip contract.
@@ -44,6 +50,11 @@ Plugin and skill renamed `design-graph` -> `uno-design-graph` to follow the
 - Version headers aligned across method, ontology, scorer, schema, and manifests.
 
 ### Repository
+
+- `docs/hotdesign-integration-findings.md`: read-only study of
+  `unoplatform/uno.hotdesign` answering what the Elements tree carries, how
+  panels are hosted, what the snapshot format is, and how selection syncs,
+  with a sketch of the smallest MCP selection bridge.
 
 - `examples/orbital-settings.graph.json`: the README excerpt as a complete,
   validated graph.

@@ -24,22 +24,33 @@ design graph is the executable form of the round-trip contract in
    `uno_app_element_peer_default_action`). One graph per presentation
    condition; name the file `<name>.runtime.<state>.graph.json`.
 2. Take `uno_app_visualtree_snapshot` and `uno_app_get_screenshot`.
-3. Produce a graph with the same ontology and ID grammar as a source-backed
-   graph. Differences from Mode 1:
+3. Build the graph mechanically:
+
+   ```bash
+   python3 ${CLAUDE_SKILL_DIR}/scripts/snapshot_to_graph.py snapshot.txt \
+       --design <design>.graph.json -o <name>.runtime.<state>.graph.json
+   ```
+
+   The parser copies `uno.type` and `uno.xName` from the snapshot, records
+   every node as `observed` / `runtime` with a locator (`ref`, `file`,
+   `line`, `flags`), drops `lib:` template internals unless `--include-lib`,
+   and keeps `dc:`, bindings, bounds, and flags as properties. `--design`
+   adopts the design graph's node *type* for `x:Name`s the runtime confirms
+   so the diff matches semantic nodes; it never copies ids or `uno.*` values.
+
+   What the snapshot cannot supply, and the diff will always report:
+   `uno.styleKey`, `uno.resourceKey`, `uno.class`, `uno.namespace`, states,
+   and tokens. Those come from Hot Design's own tree or the source; see
+   `docs/hotdesign-integration-findings.md` in the plugin repo.
+
+   Hand-authoring is still allowed when the snapshot is unavailable. Then:
    - `evidence.kind` is `observed` and `evidence.source.type` is `runtime`.
-     Put the snapshot's element path or index in `evidence.locator`.
-   - `uno.type` is the runtime type name from the snapshot, `uno.xName` its
-     `Name`, and `uno.styleKey` only when the snapshot exposes the style
-     resource key. Copy, don't coin.
-   - Behavior edges (`triggers`, `navigates-to`) are allowed **only** for
-     transitions you drove and observed in this session. Record the driving
-     action in the edge's `evidence.rationale`.
-   - States come from what you drove the app into. A state you did not
-     observe does not exist in a runtime graph.
-   - Tokens: a runtime tree exposes resolved values, not keys. Create a
-     token node only when the snapshot exposes the key, or when the value
-     matches a token in the design graph exactly (then reuse that token id
-     and cite the match in the rationale).
+   - Behavior edges (`triggers`, `navigates-to`) only for transitions you
+     drove and observed in this session; record the action in the rationale.
+   - States only for conditions you drove the app into.
+   - Tokens only when the snapshot exposes the key, or the value matches a
+     design-graph token exactly (reuse that id and cite the match).
+
 4. Validate and lint as usual. Then diff:
 
    ```bash
@@ -56,5 +67,6 @@ design graph is the executable form of the round-trip contract in
   default (`--fail-on-extra` makes it one); often template internals the
   snapshot exposes, sometimes a control the implementation added.
 
-The snapshot text format is owned by the Uno tooling. When it stabilizes, a
-parser can replace step 3; until then the mapping above is the contract.
+The snapshot text format is owned by the Uno tooling (`Uno.UI.App.Mcp`).
+The parser targets the 1.3.x line grammar documented in its docstring; a
+format change shows up as parse failures, not silent drift.

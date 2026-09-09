@@ -49,6 +49,7 @@ python3 -m pip install -r skills/uno-design-graph/scripts/requirements.txt
 | `validate_graph.py <graph>` | JSON Schema, unique ids, resolvable edges, no duplicate edges, rationale on inferences | any error |
 | `lint_graph.py <graph> [--strict]` | the binding rules: ID grammar, relation domains, per-instance token edges, style-level states, unresolved refs, confidence thresholds, behavior-edge evidence, unconsumed tokens, unattached states | any error (`--strict`: any warning) |
 | `score_graph.py <gold> <generated> [--json] [--fail-on-hallucination]` | six F1 dimensions plus an unsupported-behavior proxy | `--fail-on-hallucination` and unsupported behavior edges exist |
+| `snapshot_to_graph.py <snapshot.txt> [--design <graph>] [-o out]` | builds a runtime graph from `uno_app_visualtree_snapshot` text (App MCP); copies `uno.type` and `uno.xName`, keeps locators, drops template internals | no element lines found |
 | `diff_graph.py <design> <actual> [--fail-on-extra]` | drift in `uno.type`, `xName`, `styleKey`, `resourceKey`, `namespace` between two graphs | any missing or changed identity |
 
 Run the whole suite:
@@ -205,6 +206,11 @@ is that record:
 - **Parity check.** A graph built from the App MCP visual tree, diffed
   against the design graph, is the round-trip contract made executable. See
   `skills/uno-design-graph/references/runtime-source.md`.
+
+A read-only study of the Hot Design source, with file-and-line evidence for
+what its Elements tree carries, what the snapshot format is, and the smallest
+change that would bridge selection to the graph, is in
+[`docs/hotdesign-integration-findings.md`](docs/hotdesign-integration-findings.md).
 
 ## Why the rules are shaped the way they are
 

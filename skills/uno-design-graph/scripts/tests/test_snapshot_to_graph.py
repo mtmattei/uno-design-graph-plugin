@@ -173,12 +173,21 @@ class DiffAgainstDesign(unittest.TestCase):
         self.assertTrue({"token.color.surface1", "token.radius.12", "state.profile.saved"} <= missing)
 
     def test_design_hint_adopts_node_type_for_confirmed_xnames(self):
-        d = diff_graph.diff(self.design, build(design=self.design), only_mapped=True)
-        self.assertNotIn("component.settings-card.profile", {m["id"] for m in d["missing"]})
-        # The hint never copies uno.* values: the runtime node still carries only what the snapshot exposes.
         hinted = build(design=self.design)
-        self.assertEqual(node(hinted, "component.settings-card.profile")["properties"]["uno"],
-                         {"type": "Border", "xName": "ProfileSection"})
+        d = diff_graph.diff(self.design, hinted, only_mapped=True)
+        self.assertNotIn("component.settings-card.profile", {m["id"] for m in d["missing"]})
+        # The hint adopts the type only: the id stays runtime-derived and uno.* carries only what the snapshot exposes.
+        card = by_xname(hinted, "ProfileSection")
+        self.assertEqual(card["type"], "component")
+        self.assertEqual(card["id"], "component.profile-section")
+        self.assertEqual(card["properties"]["uno"], {"type": "Border", "xName": "ProfileSection"})
+
+    def test_design_hinted_graph_validates_and_lints_strict(self):
+        g = build(design=self.design)
+        self.assertEqual(validate_graph(write_tmp(g), SCHEMA), [])
+        r = lint_graph.lint(g)
+        self.assertEqual(r.errors, [])
+        self.assertEqual(r.warnings, [])
 
 
 class Cli(unittest.TestCase):

@@ -345,8 +345,14 @@ def build_graph(roots: list[Node], graph_id: str | None, screen_slug: str | None
         if graph_type == "screen":
             node_id = f"screen.{screen_slug}"
         elif design_hint is not None and design_hint.get("type") in {"region", "component", "control", "content", "asset"}:
+            # Adopt the design node's TYPE only. diff_graph.py keys identity on
+            # (type, xName), so that is enough to match. The design id is not
+            # adopted: a 3-segment component id means "instance of a canonical",
+            # and a runtime tree observes no canonical, so a hinted component
+            # takes the 2-segment canonical form like a scope-derived one.
             graph_type = design_hint["type"]
-            node_id = design_hint["id"]
+            node_id = (f"component.{element_slug(node)}" if graph_type == "component"
+                       else f"{graph_type}.{screen_slug}.{element_slug(node)}")
         elif graph_type == "component":
             node_id = f"component.{screen_slug_from_file(node.file) if node.file else slug(node.type_name)}"
         else:
@@ -417,8 +423,8 @@ def main() -> int:
     parser.add_argument("--screen-slug", help="Slug for the screen node id (default: derived from the root file name)")
     parser.add_argument("--include-lib", action="store_true", help="Keep 'lib:' / '!lib' template internals (default: drop)")
     parser.add_argument("--design", type=Path,
-                        help="Design graph whose node types and ids are adopted for x:Names the runtime confirms "
-                             "(never its uno.* values), so diff_graph.py matches semantic nodes across the two graphs")
+                        help="Design graph whose node types are adopted for x:Names the runtime confirms "
+                             "(never its ids or uno.* values), so diff_graph.py matches semantic nodes across the two graphs")
     args = parser.parse_args()
 
     text = sys.stdin.read() if str(args.snapshot) == "-" else args.snapshot.read_text(encoding="utf-8")
