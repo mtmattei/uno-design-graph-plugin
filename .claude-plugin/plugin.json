@@ -1,12 +1,13 @@
 {
-  "name": "design-graph",
-  "version": "0.5.0",
-  "description": "Generate a semantic Design Graph (JSON IR) from an Uno Platform / WinUI screen, a Figma export, or a screenshot - and implement screens from one. Includes the schema, ontology, inference and token rules, the Uno mapping layer, and validation/scoring scripts.",
+  "name": "uno-design-graph",
+  "version": "0.6.0",
+  "description": "Generate a semantic Design Graph (JSON IR) from an Uno Platform / WinUI screen or a screenshot, implement screens from one, and verify the running app against it. Includes the schema, ontology, inference and token rules, the Uno mapping layer, and validation, lint, scoring, and diff scripts.",
   "author": {
     "name": "mtmattei",
     "url": "https://github.com/mtmattei/Uno-Builds"
   },
-  "homepage": "https://github.com/mtmattei/Uno-Builds/tree/main/design-graph-kit",
+  "homepage": "https://github.com/mtmattei/uno-design-graph-plugin",
+  "repository": "https://github.com/mtmattei/uno-design-graph-plugin",
   "keywords": [
     "uno-platform",
     "winui",

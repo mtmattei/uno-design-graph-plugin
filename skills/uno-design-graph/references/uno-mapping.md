@@ -1,9 +1,12 @@
-# Uno Mapping Layer (`properties.uno`) — v0.4
+# Uno Mapping Layer (`properties.uno`) — v0.6
 
-The Design Graph targets Uno Platform (see `docs/architecture.md`). Every
-node may carry an `uno` object inside its `properties`, mapping the semantic
-concept to its Uno/WinUI realization. The JSON Schema is unchanged
-(`properties` is open); this document is the binding convention.
+The Design Graph targets Uno Platform (see the *Target framework* section
+of `method.md`). Every node may carry an `uno` object inside its
+`properties`, mapping the semantic concept to its Uno/WinUI realization.
+Since schema 0.2.0 the layer is typed per node type: unknown keys are
+schema errors, so a typo like `xname` fails validation instead of silently
+scoring zero on `uno_mapping`. This document is the convention behind
+those types.
 
 Evidence discipline applies unchanged: when the source is an Uno app, the
 mapping is `declared`/`observed` fact — copy it exactly. When the source is a
@@ -35,9 +38,17 @@ no source declares — omit the field instead.
 "uno": { "type": "Button", "styleKey": "OrbitalPrimaryButtonSm", "xName": "SaveUsernameButton" }
 ```
 
-`type` is the exact WinUI / Uno Toolkit type name (`Button`, `TextBox`,
-`ContentDialog`, `FontIcon`, `utu:AutoLayout`, `utu:TabBar`, …). The
-semantic `role` field stays lowercase-human (`button`, `textbox`); the
+`type` is the exact type name with **no xmlns prefix** (`Button`,
+`TextBox`, `ContentDialog`, `FontIcon`, `AutoLayout`, `TabBar`). A prefix
+like `utu:` is a per-file alias, not a declared identity, so it never
+survives a round trip. For anything outside the WinUI namespace, carry the
+CLR namespace in `namespace`:
+
+```json
+"uno": { "type": "AutoLayout", "namespace": "Uno.Toolkit.UI", "xName": "HeaderLayout" }
+```
+
+The semantic `role` field stays lowercase-human (`button`, `textbox`); the
 `uno.type` carries the real type. When unsure of the correct Uno control
 for a concept, resolve it with `uno_platform_docs_search` rather than
 guessing.
@@ -77,9 +88,14 @@ exact key survives in `uno.resourceKey`.
 ### `state`
 
 ```json
-"uno": { "mechanism": "VisualStateManager" }
+"uno": { "mechanism": "VisualStateManager", "visualState": "Saved" }
 "uno": { "mechanism": "code-behind", "member": "AnimationHelper.FadeUp" }
+"uno": { "mechanism": "binding", "member": "HasSelection" }
 ```
+
+`mechanism` is one of `VisualStateManager`, `code-behind`, `binding`,
+`storyboard`, `other`. `member` records the driving condition or helper
+(the v0.5 condition-vs-presentation rule keys on it).
 
 ## Rules
 
@@ -92,5 +108,8 @@ exact key survives in `uno.resourceKey`.
    theming/resource idioms for the mapping layer (and for nothing in the
    semantic layer — that stays evidence-driven from the design source).
 4. **Round-trip contract.** Design → graph → implementation → graph must
-   preserve `uno.resourceKey` / `uno.xName` / `uno.type` exactly; drift in
-   this layer is a parity defect, not naming noise.
+   preserve `uno.resourceKey` / `uno.xName` / `uno.styleKey` / `uno.type`
+   exactly; drift in this layer is a parity defect, not naming noise.
+   `scripts/diff_graph.py <design> <actual>` checks it; see
+   `references/runtime-source.md` for building the `actual` graph from the
+   running app.

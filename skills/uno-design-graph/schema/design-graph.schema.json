@@ -1,0 +1,687 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mtmattei/uno-design-graph-plugin/schema/design-graph.schema.json",
+  "title": "Design Graph",
+  "description": "A portable semantic intermediate representation for UI designs and Uno Platform applications.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "graphId",
+    "nodes",
+    "edges"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "enum": [
+        "0.1",
+        "0.1.0",
+        "0.2.0"
+      ],
+      "description": "0.1 / 0.1.0: legacy graphs, open uno layer. 0.2.0: typed properties.uno per node type."
+    },
+    "graphId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "sourceSummary": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/edge"
+      }
+    },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/unresolved"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "screen",
+            "design-system"
+          ],
+          "description": "screen (default): tokens limited to what the modeled surface consumes. design-system: the full token/style inventory of a theme, no screen nodes required."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "screenshot",
+            "figma",
+            "xaml",
+            "csharp",
+            "runtime",
+            "html",
+            "design-system",
+            "user",
+            "other"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": [
+        "kind",
+        "confidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "observed",
+            "declared",
+            "derived",
+            "inferred"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "locator": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Source-specific locator such as Figma node id, XAML line, DOM selector, or screenshot region."
+        }
+      }
+    },
+    "geometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0
+        },
+        "height": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "px",
+            "dip",
+            "pt",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "evidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]+$"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "screen",
+            "region",
+            "component",
+            "control",
+            "content",
+            "asset",
+            "token",
+            "state"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "semanticRole": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "value": {},
+        "geometry": {
+          "$ref": "#/$defs/geometry"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "evidence": {
+          "$ref": "#/$defs/evidence"
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "required": [
+        "from",
+        "relation",
+        "to",
+        "evidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "relation": {
+          "type": "string",
+          "enum": [
+            "contains",
+            "instance-of",
+            "variant-of",
+            "uses-token",
+            "has-state",
+            "navigates-to",
+            "triggers"
+          ]
+        },
+        "to": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "evidence": {
+          "$ref": "#/$defs/evidence"
+        }
+      }
+    },
+    "unresolved": {
+      "type": "object",
+      "required": [
+        "id",
+        "question",
+        "relatedIds"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        },
+        "relatedIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "possibleValues": {
+          "type": "array",
+          "items": {}
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "unoType": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+      "description": "Exact WinUI / Uno Toolkit / custom type name with no xmlns prefix. Put the CLR namespace in uno.namespace."
+    },
+    "unoScreen": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/unoType"
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1
+        },
+        "class": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "unoComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/unoType"
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1
+        },
+        "class": {
+          "type": "string",
+          "minLength": 1
+        },
+        "styleKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "xName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "member": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "unoControl": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/unoType"
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1
+        },
+        "styleKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "xName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "member": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "unoContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/unoType"
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1
+        },
+        "styleKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "xName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "member": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "unoAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/unoType"
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1
+        },
+        "xName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "glyph": {
+          "type": "string",
+          "minLength": 1
+        },
+        "styleKey": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "unoToken": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "resourceKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resourceType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "styleKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "property": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "unoState": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mechanism": {
+          "type": "string",
+          "enum": [
+            "VisualStateManager",
+            "code-behind",
+            "binding",
+            "storyboard",
+            "other"
+          ]
+        },
+        "member": {
+          "type": "string",
+          "minLength": 1
+        },
+        "visualState": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "unoRegion": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/unoType"
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1
+        },
+        "xName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "styleKey": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "nodeStrictUno": {
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "screen"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "properties": {
+                  "uno": {
+                    "$ref": "#/$defs/unoScreen"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "region"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "properties": {
+                  "uno": {
+                    "$ref": "#/$defs/unoRegion"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "component"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "properties": {
+                  "uno": {
+                    "$ref": "#/$defs/unoComponent"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "control"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "properties": {
+                  "uno": {
+                    "$ref": "#/$defs/unoControl"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "content"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "properties": {
+                  "uno": {
+                    "$ref": "#/$defs/unoContent"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "asset"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "properties": {
+                  "uno": {
+                    "$ref": "#/$defs/unoAsset"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "token"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "properties": {
+                  "uno": {
+                    "$ref": "#/$defs/unoToken"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "state"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "properties": {
+                  "uno": {
+                    "$ref": "#/$defs/unoState"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schemaVersion": {
+            "const": "0.2.0"
+          }
+        },
+        "required": [
+          "schemaVersion"
+        ]
+      },
+      "then": {
+        "properties": {
+          "nodes": {
+            "items": {
+              "$ref": "#/$defs/nodeStrictUno"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

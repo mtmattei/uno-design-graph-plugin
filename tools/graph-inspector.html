@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Design Graph Inspector</title>
+</head>
+<body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f3f5f8;--panel:#ffffff;--panel2:#eaeef4;--ink:#1a212c;--muted:#5d6a7a;--line:#d5dbe4;--line2:#b9c2cf;
+  --accent:#2f56c9;--focus:#2f56c9;
+  --c-screen:#4b45c6;--c-region:#0f7f86;--c-component:#2160c4;--c-control:#c26a00;--c-content:#5b6b80;--c-asset:#7743c9;--c-token:#1f7a3a;--c-state:#b4235f;
+  --e-contains:#7c8797;--e-instance:#2160c4;--e-token:#1f7a3a;--e-state:#b4235f;--e-nav:#4b45c6;--e-variant:#7743c9;
+  --warn:#b45309;--sel:#2f56c9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11151c;--panel:#181d26;--panel2:#1f2630;--ink:#e4e9f0;--muted:#94a0b1;--line:#2a323e;--line2:#3a4453;
+    --accent:#7d9bff;--focus:#7d9bff;
+    --c-screen:#9a94ff;--c-region:#4fc3c8;--c-component:#6ea0ff;--c-control:#f0a44a;--c-content:#a3b0c2;--c-asset:#b48cff;--c-token:#5fcf7f;--c-state:#f072a8;
+    --e-contains:#6b7685;--e-instance:#6ea0ff;--e-token:#5fcf7f;--e-state:#f072a8;--e-nav:#9a94ff;--e-variant:#b48cff;
+    --warn:#f5b342;--sel:#7d9bff;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11151c;--panel:#181d26;--panel2:#1f2630;--ink:#e4e9f0;--muted:#94a0b1;--line:#2a323e;--line2:#3a4453;
+  --accent:#7d9bff;--focus:#7d9bff;
+  --c-screen:#9a94ff;--c-region:#4fc3c8;--c-component:#6ea0ff;--c-control:#f0a44a;--c-content:#a3b0c2;--c-asset:#b48cff;--c-token:#5fcf7f;--c-state:#f072a8;
+  --e-contains:#6b7685;--e-instance:#6ea0ff;--e-token:#5fcf7f;--e-state:#f072a8;--e-nav:#9a94ff;--e-variant:#b48cff;
+  --warn:#f5b342;--sel:#7d9bff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;height:100vh;display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11.5px}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+header{display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em}
+header .name{color:var(--muted)}
+header .stats{display:flex;gap:14px;margin-left:auto;font-variant-numeric:tabular-nums;color:var(--muted)}
+header .stats b{color:var(--ink);font-weight:500}
+.tag{display:inline-block;padding:1px 7px;border:1px solid var(--line2);border-radius:999px;font-size:11px;color:var(--muted);letter-spacing:.02em;text-transform:uppercase}
+main{display:grid;grid-template-columns:230px 1fr 320px;min-height:0}
+aside{background:var(--panel);border-right:1px solid var(--line);overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:16px}
+aside.right{border-right:0;border-left:1px solid var(--line)}
+h2{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
+.legend{display:flex;flex-direction:column;gap:5px}
+.legend label{display:flex;align-items:center;gap:8px;cursor:pointer}
+.legend input{margin:0}
+.sw{width:10px;height:10px;border-radius:2px;flex:none}
+.ln{width:22px;height:0;border-top:2px solid;flex:none}
+.ln.dashed{border-top-style:dashed}.ln.dotted{border-top-style:dotted}
+.legend .n{flex:1}.legend .cnt{color:var(--muted);font-variant-numeric:tabular-nums}
+input[type=search],textarea{width:100%;padding:6px 8px;border:1px solid var(--line2);border-radius:4px;background:var(--panel2)}
+textarea{min-height:90px;resize:vertical}
+.btn{padding:6px 10px;border:1px solid var(--line2);border-radius:4px;background:var(--panel2);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.row{display:flex;gap:8px;align-items:center}
+.err{color:var(--warn);white-space:pre-wrap}
+#stage{position:relative;overflow:hidden;background:
+  linear-gradient(var(--line) 1px,transparent 1px) 0 0/40px 40px,
+  linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/40px 40px,var(--bg)}
+#svg{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#svg.dragging{cursor:grabbing}
+.hint{position:absolute;left:12px;bottom:10px;color:var(--muted);font-size:11px;background:var(--panel);padding:3px 8px;border-radius:4px;border:1px solid var(--line)}
+.zoom{position:absolute;right:12px;top:10px;display:flex;gap:4px}
+.zoom .btn{padding:3px 8px}
+/* graph */
+.edge{fill:none;stroke-width:1.5;opacity:.85}
+.edge.contains{stroke:var(--e-contains)}
+.edge.instance-of{stroke:var(--e-instance);stroke-dasharray:6 4}
+.edge.variant-of{stroke:var(--e-variant);stroke-dasharray:6 4}
+.edge.uses-token{stroke:var(--e-token);stroke-dasharray:2 3}
+.edge.has-state{stroke:var(--e-state)}
+.edge.triggers{stroke:var(--e-state);stroke-width:2.2}
+.edge.navigates-to{stroke:var(--e-nav);stroke-width:2.2}
+.edge.dim{opacity:.12}
+.edge.hl{opacity:1;stroke-width:2.6}
+.node{cursor:pointer}
+.node rect.box{fill:var(--panel);stroke:var(--line2);stroke-width:1;rx:5}
+.node.inferred rect.box{stroke-dasharray:4 3}
+.node rect.bar{rx:2}
+.node text{fill:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;pointer-events:none}
+.node text.sub{fill:var(--muted);font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10px}
+.node.dim{opacity:.18}
+.node.sel rect.box{stroke:var(--sel);stroke-width:2}
+.node .q{fill:var(--warn)}
+.node .qt{fill:var(--panel);font-size:10px;font-weight:600}
+.band{fill:none;stroke:var(--line2);stroke-dasharray:3 5;rx:8}
+.bandlbl{fill:var(--muted);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+/* inspector */
+.insp .title{font-size:15px;font-weight:600;margin:0 0 2px;text-wrap:balance}
+.insp .id{color:var(--muted);word-break:break-all}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{padding:2px 8px;border-radius:999px;font-size:11px;background:var(--panel2);border:1px solid var(--line)}
+.chip.type{color:#fff;border-color:transparent}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 10px;margin:0}
+dt{color:var(--muted)}dd{margin:0;word-break:break-word}
+.sec{border-top:1px solid var(--line);padding-top:10px}
+.evi{background:var(--panel2);border-radius:4px;padding:8px 10px}
+.evi .k{font-weight:600}
+.evi .mono,.insp dd.mono{word-break:break-all;overflow-wrap:anywhere}
+.conf{display:inline-block;height:6px;width:60px;background:var(--line);border-radius:3px;vertical-align:middle;overflow:hidden}
+.conf i{display:block;height:100%;background:var(--accent)}
+ul.edges{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+ul.edges li{display:flex;gap:6px;align-items:baseline}
+ul.edges .rel{color:var(--muted);font-size:11px;white-space:nowrap}
+ul.edges a{color:var(--accent);text-decoration:none;cursor:pointer;word-break:break-all}
+ul.edges a:hover{text-decoration:underline}
+.unres{border-left:3px solid var(--warn);padding:6px 10px;background:var(--panel2);border-radius:0 4px 4px 0}
+.unres .q{font-weight:500}
+.empty{color:var(--muted)}
+@media (max-width:900px){main{grid-template-columns:1fr}aside{max-height:32vh}#stage{min-height:50vh}}
+@media (prefers-reduced-motion:no-preference){.node,.edge{transition:opacity .15s}}
+</style>
+
+<header>
+  <h1>Design Graph Inspector</h1>
+  <span class="name" id="gname"></span>
+  <span class="tag" id="gkind"></span>
+  <div class="stats"><span><b id="cn">0</b> nodes</span><span><b id="ce">0</b> edges</span><span><b id="cu">0</b> unresolved</span></div>
+</header>
+<main>
+  <aside class="left">
+    <div>
+      <h2>Find</h2>
+      <input type="search" id="q" placeholder="id, name, x:Name, resource key" aria-label="Find nodes">
+    </div>
+    <div>
+      <h2>Node types</h2>
+      <div class="legend" id="types"></div>
+    </div>
+    <div>
+      <h2>Relations</h2>
+      <div class="legend" id="rels"></div>
+    </div>
+    <div>
+      <h2>Evidence</h2>
+      <div class="legend">
+        <label><input type="checkbox" id="onlyInf"><span class="n">Inferred only</span></label>
+        <label><input type="checkbox" id="onlyUnres"><span class="n">Touching unresolved</span></label>
+      </div>
+    </div>
+    <div>
+      <h2>Load a graph</h2>
+      <div class="row" style="margin-bottom:6px"><input type="file" id="file" accept=".json,application/json" aria-label="Open a .graph.json file"></div>
+      <textarea id="paste" placeholder="…or paste a .graph.json here" aria-label="Paste graph JSON"></textarea>
+      <div class="row" style="margin-top:6px"><button class="btn" id="render">Render</button><button class="btn" id="reset">Example</button></div>
+      <div class="err" id="err"></div>
+    </div>
+  </aside>
+  <div id="stage">
+    <svg id="svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Node graph of the loaded Design Graph: containment tree in the middle, states on the left, tokens on the right, canonical components below">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker>
+      </defs>
+      <g id="view"><g id="bands"></g><g id="edges"></g><g id="nodes"></g></g>
+    </svg>
+    <div class="zoom"><button class="btn" id="zin" aria-label="Zoom in">+</button><button class="btn" id="zout" aria-label="Zoom out">−</button><button class="btn" id="zfit">Fit</button></div>
+    <div class="hint">Drag to pan · wheel to zoom · click a node to inspect</div>
+  </div>
+  <aside class="right insp" id="insp"><p class="empty">Select a node.</p></aside>
+</main>
+
+<script id="example" type="application/json">{
+  "schemaVersion": "0.2.0",
+  "graphId": "orbital-settings",
+  "name": "Orbital Settings",
+  "description": "Abridged from the eval-05 gold graph in the Design Graph Kit (65 nodes, 96 edges). Every control type, x:Name, and style key here is one the kit's docs cite verbatim from the Orbital source; the three ABOUT rows other than Platform and the dialog are omitted.",
+  "sourceSummary": [
+    {
+      "type": "xaml",
+      "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+    },
+    {
+      "type": "csharp",
+      "path": "Orbital/Orbital/Presentation/SettingsPage.xaml.cs"
+    },
+    {
+      "type": "design-system",
+      "label": "Orbital Styles/*.xaml"
+    }
+  ],
+  "metadata": {
+    "kind": "screen",
+    "kit": "https://github.com/mtmattei/Uno-Builds/tree/main/design-graph-kit/evals/05-orbital-settings"
+  },
+  "nodes": [
+    {
+      "id": "screen.settings",
+      "type": "screen",
+      "name": "Settings",
+      "properties": {
+        "uno": {
+          "type": "Page",
+          "class": "Orbital.Presentation.SettingsPage"
+        }
+      },
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "id": "component.page-header",
+      "type": "component",
+      "name": "Page header",
+      "role": "header",
+      "properties": {
+        "uno": {
+          "type": "UserControl",
+          "class": "Orbital.Controls.PageHeader"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        },
+        "rationale": "Referenced UserControl; expanded per method.md Mode 1 step 2."
+      }
+    },
+    {
+      "id": "asset.header.logo",
+      "type": "asset",
+      "name": "Uno logo",
+      "role": "logo",
+      "properties": {
+        "uno": {
+          "type": "Image",
+          "source": "ms-appx:///Assets/Icons/Uno-logo.png"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "label": "Orbital.Controls.PageHeader"
+        }
+      }
+    },
+    {
+      "id": "control.header.search",
+      "type": "control",
+      "name": "Search",
+      "role": "button",
+      "semanticRole": "searchInput",
+      "properties": {
+        "uno": {
+          "type": "Button"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "label": "Orbital.Controls.PageHeader"
+        },
+        "rationale": "Raises the static SearchRequested event; handler is outside the supplied source."
+      }
+    },
+    {
+      "id": "region.settings.content",
+      "type": "region",
+      "name": "Content",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "id": "component.settings-card",
+      "type": "component",
+      "name": "Settings card",
+      "role": "card",
+      "properties": {
+        "uno": {
+          "type": "Border",
+          "styleKey": "OrbitalCardStyle"
+        }
+      },
+      "evidence": {
+        "kind": "derived",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        },
+        "rationale": "Two bordered sections (PROFILE, ABOUT) share OrbitalCardStyle."
+      }
+    },
+    {
+      "id": "component.settings-card.profile",
+      "type": "component",
+      "name": "Profile",
+      "properties": {
+        "uno": {
+          "xName": "ProfileSection"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "id": "component.settings-card.about",
+      "type": "component",
+      "name": "About",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "id": "control.profile.username",
+      "type": "control",
+      "name": "Username",
+      "role": "textbox",
+      "properties": {
+        "uno": {
+          "type": "TextBox",
+          "xName": "UsernameBox"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        },
+        "rationale": "x:Name=UsernameBox."
+      }
+    },
+    {
+      "id": "control.profile.save",
+      "type": "control",
+      "name": "Save",
+      "role": "button",
+      "semanticRole": "primaryAction",
+      "properties": {
+        "uno": {
+          "type": "Button",
+          "styleKey": "OrbitalPrimaryButtonSm",
+          "xName": "SaveUsernameButton"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        },
+        "rationale": "x:Name=SaveUsernameButton, OrbitalPrimaryButtonSm (only high-emphasis action)."
+      }
+    },
+    {
+      "id": "content.about.section-title",
+      "type": "content",
+      "name": "ABOUT",
+      "text": "ABOUT",
+      "semanticRole": "sectionHeader",
+      "properties": {
+        "uno": {
+          "type": "TextBlock",
+          "styleKey": "OrbitalMonoSmall"
+        }
+      },
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "id": "component.info-row",
+      "type": "component",
+      "name": "Info row (label/value)",
+      "role": "keyValueRow",
+      "properties": {
+        "parts": [
+          "label",
+          "value"
+        ],
+        "uno": {
+          "type": "Grid"
+        }
+      },
+      "evidence": {
+        "kind": "derived",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        },
+        "rationale": "Four label/value grids with identical structure inside ABOUT."
+      }
+    },
+    {
+      "id": "component.info-row.platform",
+      "type": "component",
+      "name": "Platform",
+      "properties": {
+        "value": "{Binding PlatformInfo}"
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "id": "state.profile.saved",
+      "type": "state",
+      "name": "Saved",
+      "semanticRole": "confirmation",
+      "properties": {
+        "uno": {
+          "mechanism": "code-behind"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "csharp",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml.cs"
+        },
+        "rationale": "Save sets button content to 'Saved!' for 1.5s after SettingsService.SaveUsername."
+      }
+    },
+    {
+      "id": "state.settings.entering",
+      "type": "state",
+      "name": "Entering",
+      "properties": {
+        "uno": {
+          "mechanism": "code-behind",
+          "member": "AnimationHelper.FadeUp"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "csharp",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml.cs"
+        },
+        "rationale": "Page entrance runs AnimationHelper.FadeUp on load."
+      }
+    },
+    {
+      "id": "token.radius.12",
+      "type": "token",
+      "name": "12 radius",
+      "category": "radius",
+      "value": 12,
+      "properties": {
+        "unit": "px",
+        "uno": {
+          "styleKey": "OrbitalCardStyle",
+          "property": "CornerRadius"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "design-system",
+          "label": "Orbital Styles/*.xaml"
+        },
+        "rationale": "OrbitalCardStyle CornerRadius."
+      }
+    },
+    {
+      "id": "token.color.surface1",
+      "type": "token",
+      "name": "Surface 1",
+      "category": "color",
+      "properties": {
+        "uno": {
+          "resourceKey": "OrbitalSurface1Brush",
+          "resourceType": "SolidColorBrush"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "design-system",
+          "label": "Orbital Styles/*.xaml"
+        },
+        "rationale": "OrbitalSurface1Brush, consumed through OrbitalCardStyle."
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "screen.settings",
+      "relation": "contains",
+      "to": "component.page-header",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.page-header",
+      "relation": "contains",
+      "to": "asset.header.logo",
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "label": "Orbital.Controls.PageHeader"
+        }
+      }
+    },
+    {
+      "from": "component.page-header",
+      "relation": "contains",
+      "to": "control.header.search",
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "label": "Orbital.Controls.PageHeader"
+        }
+      }
+    },
+    {
+      "from": "screen.settings",
+      "relation": "contains",
+      "to": "region.settings.content",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "region.settings.content",
+      "relation": "contains",
+      "to": "component.settings-card.profile",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "region.settings.content",
+      "relation": "contains",
+      "to": "component.settings-card.about",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card.profile",
+      "relation": "instance-of",
+      "to": "component.settings-card",
+      "evidence": {
+        "kind": "derived",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card.about",
+      "relation": "instance-of",
+      "to": "component.settings-card",
+      "evidence": {
+        "kind": "derived",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card.profile",
+      "relation": "contains",
+      "to": "control.profile.username",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card.profile",
+      "relation": "contains",
+      "to": "control.profile.save",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card.about",
+      "relation": "contains",
+      "to": "content.about.section-title",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card.about",
+      "relation": "contains",
+      "to": "component.info-row.platform",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.info-row.platform",
+      "relation": "instance-of",
+      "to": "component.info-row",
+      "evidence": {
+        "kind": "derived",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card",
+      "relation": "uses-token",
+      "to": "token.radius.12",
+      "properties": {
+        "appliesTo": "cornerRadius"
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "design-system",
+          "label": "Orbital Styles/*.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card",
+      "relation": "uses-token",
+      "to": "token.color.surface1",
+      "properties": {
+        "appliesTo": "background"
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "design-system",
+          "label": "Orbital Styles/*.xaml"
+        }
+      }
+    },
+    {
+      "from": "control.profile.save",
+      "relation": "triggers",
+      "to": "state.profile.saved",
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "csharp",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml.cs"
+        },
+        "rationale": "Save handler swaps content to 'Saved!' after persisting the name."
+      }
+    },
+    {
+      "from": "control.profile.save",
+      "relation": "has-state",
+      "to": "state.profile.saved",
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "csharp",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml.cs"
+        }
+      }
+    },
+    {
+      "from": "screen.settings",
+      "relation": "has-state",
+      "to": "state.settings.entering",
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "csharp",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml.cs"
+        }
+      }
+    }
+  ],
+  "unresolved": [
+    {
+      "id": "unresolved.header.search-target",
+      "question": "What UI does the header search / command palette open?",
+      "relatedIds": [
+        "control.header.search"
+      ],
+      "possibleValues": [
+        "global command palette",
+        "search overlay",
+        "unknown"
+      ],
+      "reason": "PageHeader raises a static SearchRequested event; the handler and resulting UI are outside the supplied source."
+    }
+  ]
+}</script>
+<script>
+(function(){
+const TYPES=["screen","region","component","control","content","asset","token","state"];
+const RELS=[["contains","solid"],["instance-of","dashed"],["variant-of","dashed"],["uses-token","dotted"],["has-state","solid"],["triggers","solid"],["navigates-to","solid"]];
+const relColor={contains:"var(--e-contains)","instance-of":"var(--e-instance)","variant-of":"var(--e-variant)","uses-token":"var(--e-token)","has-state":"var(--e-state)",triggers:"var(--e-state)","navigates-to":"var(--e-nav)"};
+const $=s=>document.querySelector(s);
+const NS="http://www.w3.org/2000/svg";
+const el=(n,a={},t)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;return e;};
+const W=176,H=46,GX=26,GY=96;
+
+let G=null,L=null,sel=null,typeOn={},relOn={};
+TYPES.forEach(t=>typeOn[t]=true);RELS.forEach(([r])=>relOn[r]=true);
+
+function buildLegends(){
+  $("#types").innerHTML="";TYPES.forEach(t=>{
+    const lab=document.createElement("label");
+    lab.innerHTML=`<input type="checkbox" checked data-t="${t}"><span class="sw" style="background:var(--c-${t})"></span><span class="n">${t}</span><span class="cnt" data-cnt="${t}"></span>`;
+    lab.querySelector("input").addEventListener("change",e=>{typeOn[t]=e.target.checked;paint();});
+    $("#types").appendChild(lab);
+  });
+  $("#rels").innerHTML="";RELS.forEach(([r,style])=>{
+    const lab=document.createElement("label");
+    lab.innerHTML=`<input type="checkbox" checked><span class="ln ${style}" style="border-color:${relColor[r]}"></span><span class="n">${r}</span><span class="cnt" data-rcnt="${r}"></span>`;
+    lab.querySelector("input").addEventListener("change",e=>{relOn[r]=e.target.checked;paint();});
+    $("#rels").appendChild(lab);
+  });
+}
+
+function layout(g){
+  const nodes=g.nodes.filter(n=>n&&n.id),edges=g.edges||[];
+  const byId=new Map(nodes.map(n=>[n.id,n]));
+  const kids=new Map(),hasParent=new Set();
+  edges.filter(e=>e.relation==="contains"&&byId.has(e.from)&&byId.has(e.to)).forEach(e=>{
+    if(!kids.has(e.from))kids.set(e.from,[]);kids.get(e.from).push(e.to);hasParent.add(e.to);});
+  const roots=nodes.filter(n=>n.type==="screen"||(kids.has(n.id)&&!hasParent.has(n.id)&&n.type!=="component"));
+  const inTree=new Set();
+  const pos=new Map();let slot=0;const depthOf=new Map();
+  function place(id,d){
+    if(inTree.has(id))return;inTree.add(id);depthOf.set(id,d);
+    const ch=(kids.get(id)||[]).filter(c=>!inTree.has(c));
+    if(!ch.length){pos.set(id,{x:slot*(W+GX),y:d*(GY+H)});slot++;return;}
+    ch.forEach(c=>place(c,d+1));
+    const xs=ch.map(c=>pos.get(c).x);pos.set(id,{x:(Math.min(...xs)+Math.max(...xs))/2,y:d*(GY+H)});
+  }
+  roots.forEach(r=>place(r.id,0));
+  // instance ordering: canonicals with instances go to the bottom band; tokens right; states left; anything else bottom too
+  const treeW=Math.max(0,slot*(W+GX)-GX);
+  const maxD=Math.max(0,...[...depthOf.values()]);
+  const tokens=nodes.filter(n=>n.type==="token"&&!inTree.has(n.id));
+  const states=nodes.filter(n=>n.type==="state"&&!inTree.has(n.id));
+  const rest=nodes.filter(n=>!inTree.has(n.id)&&n.type!=="token"&&n.type!=="state");
+  const sideGap=120;
+  states.forEach((n,i)=>pos.set(n.id,{x:-(W+sideGap),y:i*(H+18)}));
+  tokens.forEach((n,i)=>pos.set(n.id,{x:treeW+sideGap,y:i*(H+18)}));
+  const bottomY=(maxD+1)*(GY+H)+30;
+  rest.forEach((n,i)=>pos.set(n.id,{x:i*(W+GX),y:bottomY}));
+  // normalise
+  let minX=Infinity,minY=Infinity;pos.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);});
+  pos.forEach(p=>{p.x-=minX-40;p.y-=minY-40;});
+  const bands=[];
+  const band=(list,label)=>{if(!list.length)return;const ps=list.map(n=>pos.get(n.id));
+    const x=Math.min(...ps.map(p=>p.x))-12,y=Math.min(...ps.map(p=>p.y))-24,x2=Math.max(...ps.map(p=>p.x))+W+12,y2=Math.max(...ps.map(p=>p.y))+H+12;
+    bands.push({x,y,w:x2-x,h:y2-y,label});};
+  band(states,"states");band(tokens,"tokens");band(rest,"canonical components");
+  return {nodes,edges,byId,pos,bands};
+}
+
+function isInferred(n){return (n.evidence||{}).kind==="inferred";}
+function unresolvedFor(id){return (G.unresolved||[]).filter(u=>(u.relatedIds||[]).includes(id));}
+function matches(n,q){if(!q)return true;q=q.toLowerCase();const u=(n.properties||{}).uno||{};
+  return [n.id,n.name,n.text,u.xName,u.resourceKey,u.styleKey,u.class].some(v=>v&&String(v).toLowerCase().includes(q));}
+
+function draw(){
+  const nodesG=$("#nodes"),edgesG=$("#edges"),bandsG=$("#bands");
+  nodesG.innerHTML="";edgesG.innerHTML="";bandsG.innerHTML="";
+  L.bands.forEach(b=>{bandsG.appendChild(el("rect",{class:"band",x:b.x,y:b.y,width:b.w,height:b.h}));
+    bandsG.appendChild(el("text",{class:"bandlbl",x:b.x+8,y:b.y+14},b.label));});
+  L.edges.forEach((e,i)=>{
+    const a=L.pos.get(e.from),b=L.pos.get(e.to);if(!a||!b)return;
+    let d;
+    if(e.relation==="contains"){const x1=a.x+W/2,y1=a.y+H,x2=b.x+W/2,y2=b.y;const m=(y1+y2)/2;d=`M${x1},${y1} C${x1},${m} ${x2},${m} ${x2},${y2}`;}
+    else{const leftward=b.x+W/2<a.x+W/2;const x1=leftward?a.x:a.x+W,x2=leftward?b.x+W:b.x,y1=a.y+H/2,y2=b.y+H/2;const dx=Math.max(50,Math.abs(x2-x1)/2)*(leftward?-1:1);
+      d=`M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`;}
+    const p=el("path",{class:"edge "+e.relation,d,"marker-end":"url(#arr)","data-i":i,"data-from":e.from,"data-to":e.to});
+    edgesG.appendChild(p);
+  });
+  L.nodes.forEach(n=>{
+    const p=L.pos.get(n.id);if(!p)return;
+    const g=el("g",{class:"node"+(isInferred(n)?" inferred":""),transform:`translate(${p.x},${p.y})`,"data-id":n.id,tabindex:0,role:"button","aria-label":`${n.type} ${n.name||n.id}`});
+    g.appendChild(el("rect",{class:"box",width:W,height:H}));
+    g.appendChild(el("rect",{class:"bar",x:0,y:0,width:4,height:H,fill:`var(--c-${n.type})`}));
+    const label=n.name||n.text||n.id;const u=(n.properties||{}).uno||{};
+    g.appendChild(el("text",{x:12,y:19},label.length>24?label.slice(0,23)+"…":label));
+    const sub=u.xName||u.resourceKey||u.styleKey||u.class||u.type||n.id.split(".").slice(1).join(".");
+    g.appendChild(el("text",{class:"sub",x:12,y:36},sub.length>28?sub.slice(0,27)+"…":sub));
+    if(unresolvedFor(n.id).length){g.appendChild(el("circle",{class:"q",cx:W-12,cy:12,r:8}));g.appendChild(el("text",{class:"qt",x:W-12,y:15.5,"text-anchor":"middle"},"?"));}
+    g.addEventListener("click",()=>select(n.id));
+    g.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();select(n.id);}});
+    g.addEventListener("pointerenter",()=>hover(n.id,true));g.addEventListener("pointerleave",()=>hover(n.id,false));
+    nodesG.appendChild(g);
+  });
+  paint();
+}
+
+function paint(){
+  const q=$("#q").value.trim(),onlyInf=$("#onlyInf").checked,onlyUn=$("#onlyUnres").checked;
+  const visible=new Set();
+  L.nodes.forEach(n=>{let ok=typeOn[n.type]&&matches(n,q);if(onlyInf&&!isInferred(n))ok=false;if(onlyUn&&!unresolvedFor(n.id).length)ok=false;if(ok)visible.add(n.id);});
+  document.querySelectorAll("#nodes .node").forEach(g=>g.classList.toggle("dim",!visible.has(g.dataset.id)));
+  document.querySelectorAll("#edges .edge").forEach(p=>{const e=L.edges[+p.dataset.i];
+    const on=relOn[e.relation]&&visible.has(e.from)&&visible.has(e.to);p.classList.toggle("dim",!on);});
+  TYPES.forEach(t=>{const c=L.nodes.filter(n=>n.type===t).length;$(`[data-cnt="${t}"]`).textContent=c||"";});
+  RELS.forEach(([r])=>{const c=L.edges.filter(e=>e.relation===r).length;$(`[data-rcnt="${r}"]`).textContent=c||"";});
+}
+function hover(id,on){document.querySelectorAll("#edges .edge").forEach(p=>{if(p.dataset.from===id||p.dataset.to===id)p.classList.toggle("hl",on);});}
+
+function select(id){
+  sel=id;document.querySelectorAll("#nodes .node").forEach(g=>g.classList.toggle("sel",g.dataset.id===id));
+  const n=L.byId.get(id);const insp=$("#insp");if(!n){insp.innerHTML='<p class="empty">Select a node.</p>';return;}
+  const ev=n.evidence||{},src=ev.source||{},u=(n.properties||{}).uno||{};
+  const other=Object.entries(n.properties||{}).filter(([k])=>k!=="uno");
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const fmt=v=>typeof v==="object"?JSON.stringify(v):String(v);
+  let h=`<p class="title">${esc(n.name||n.text||n.id)}</p><div class="id mono">${esc(n.id)}</div>
+  <div class="chips"><span class="chip type" style="background:var(--c-${n.type})">${n.type}</span>${n.role?`<span class="chip">role · ${esc(n.role)}</span>`:""}${n.semanticRole?`<span class="chip">${esc(n.semanticRole)}</span>`:""}${n.category?`<span class="chip">${esc(n.category)}</span>`:""}${n.value!=null?`<span class="chip mono">${esc(fmt(n.value))}</span>`:""}</div>`;
+  h+=`<div class="sec"><h2>Evidence</h2><div class="evi"><span class="k">${esc(ev.kind||"?")}</span> · confidence ${ev.confidence!=null?ev.confidence.toFixed(2):"?"} <span class="conf"><i style="width:${Math.round((ev.confidence||0)*100)}%"></i></span>`;
+  if(src.type)h+=`<div class="mono" style="margin-top:4px">${esc(src.type)}${src.path?` · ${esc(src.path)}`:""}${src.label?` · ${esc(src.label)}`:""}</div>`;
+  if(ev.rationale)h+=`<div style="margin-top:4px">${esc(ev.rationale)}</div>`;h+=`</div></div>`;
+  if(Object.keys(u).length){h+=`<div class="sec"><h2>Uno mapping</h2><dl>`;for(const [k,v] of Object.entries(u))h+=`<dt>${esc(k)}</dt><dd class="mono">${esc(fmt(v))}</dd>`;h+=`</dl></div>`;}
+  if(other.length){h+=`<div class="sec"><h2>Properties</h2><dl>`;for(const [k,v] of other)h+=`<dt>${esc(k)}</dt><dd class="mono">${esc(fmt(v))}</dd>`;h+=`</dl></div>`;}
+  const out=L.edges.filter(e=>e.from===id),inn=L.edges.filter(e=>e.to===id);
+  const li=(e,dir)=>`<li><span class="rel">${dir==="out"?"→":"←"} ${esc(e.relation)}</span><a data-go="${esc(dir==="out"?e.to:e.from)}">${esc(dir==="out"?e.to:e.from)}</a>${(e.evidence||{}).kind==="inferred"?' <span class="chip">inferred</span>':""}</li>`;
+  h+=`<div class="sec"><h2>Edges</h2>${(out.length||inn.length)?`<ul class="edges">${out.map(e=>li(e,"out")).join("")}${inn.map(e=>li(e,"in")).join("")}</ul>`:'<p class="empty">None.</p>'}</div>`;
+  const un=unresolvedFor(id);
+  if(un.length){h+=`<div class="sec"><h2>Unresolved</h2>`;un.forEach(x=>{h+=`<div class="unres"><div class="q">${esc(x.question||x.id)}</div>${x.reason?`<div>${esc(x.reason)}</div>`:""}${x.possibleValues?`<div class="mono" style="margin-top:4px">${x.possibleValues.map(esc).join(" · ")}</div>`:""}</div>`;});h+=`</div>`;}
+  insp.innerHTML=h;
+  insp.querySelectorAll("[data-go]").forEach(a=>a.addEventListener("click",()=>{select(a.dataset.go);focusNode(a.dataset.go);}));
+}
+
+/* pan / zoom */
+const svg=$("#svg");let vb={x:0,y:0,w:1200,h:800};
+function applyVB(){svg.setAttribute("viewBox",`${vb.x} ${vb.y} ${vb.w} ${vb.h}`);}
+function fit(){const box=$("#view").getBBox();const r=svg.getBoundingClientRect();const pad=24;
+  const w=box.width+pad*2,h=box.height+pad*2;const s=Math.max(w/r.width,h/r.height);
+  vb={x:box.x-pad-(r.width*s-w)/2,y:box.y-pad-(r.height*s-h)/2,w:r.width*s,h:r.height*s};applyVB();}
+function zoom(f,cx,cy){const r=svg.getBoundingClientRect();const px=cx!=null?(cx-r.left)/r.width:.5,py=cy!=null?(cy-r.top)/r.height:.5;
+  const nw=vb.w*f,nh=vb.h*f;vb.x+=(vb.w-nw)*px;vb.y+=(vb.h-nh)*py;vb.w=nw;vb.h=nh;applyVB();}
+function focusNode(id){const p=L.pos.get(id);if(!p)return;vb.x=p.x+W/2-vb.w/2;vb.y=p.y+H/2-vb.h/2;applyVB();}
+svg.addEventListener("wheel",e=>{e.preventDefault();zoom(e.deltaY>0?1.12:1/1.12,e.clientX,e.clientY);},{passive:false});
+let drag=null;
+svg.addEventListener("pointerdown",e=>{if(e.target.closest(".node"))return;drag={x:e.clientX,y:e.clientY,vx:vb.x,vy:vb.y};svg.classList.add("dragging");svg.setPointerCapture(e.pointerId);});
+svg.addEventListener("pointermove",e=>{if(!drag)return;const r=svg.getBoundingClientRect();const s=vb.w/r.width;vb.x=drag.vx-(e.clientX-drag.x)*s;vb.y=drag.vy-(e.clientY-drag.y)*s;applyVB();});
+svg.addEventListener("pointerup",()=>{drag=null;svg.classList.remove("dragging");});
+$("#zin").addEventListener("click",()=>zoom(1/1.25));$("#zout").addEventListener("click",()=>zoom(1.25));$("#zfit").addEventListener("click",fit);
+window.addEventListener("resize",()=>{if(L)fit();});
+
+function load(g){
+  if(!g||!Array.isArray(g.nodes)||!Array.isArray(g.edges))throw new Error("Not a Design Graph: needs nodes[] and edges[].");
+  G=g;L=layout(g);sel=null;
+  $("#gname").textContent=g.name||g.graphId||"";$("#gkind").textContent=((g.metadata||{}).kind||"screen")+" · schema "+(g.schemaVersion||"?");
+  $("#cn").textContent=L.nodes.length;$("#ce").textContent=L.edges.length;$("#cu").textContent=(g.unresolved||[]).length;
+  $("#insp").innerHTML='<p class="empty">Select a node.</p>';
+  draw();requestAnimationFrame(fit);
+  const first=L.nodes.find(n=>n.type==="screen")||L.nodes[0];if(first)select(first.id);
+}
+function tryLoad(text){try{$("#err").textContent="";load(JSON.parse(text));}catch(e){$("#err").textContent=e.message;}}
+$("#render").addEventListener("click",()=>tryLoad($("#paste").value));
+$("#reset").addEventListener("click",()=>{$("#paste").value="";tryLoad($("#example").textContent);});
+$("#file").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$("#paste").value=r.result;tryLoad(r.result);};r.readAsText(f);});
+["#q","#onlyInf","#onlyUnres"].forEach(s=>$(s).addEventListener("input",paint));
+
+buildLegends();
+tryLoad($("#example").textContent);
+})();
+</script>
+
+</body>
+</html>

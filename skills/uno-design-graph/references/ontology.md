@@ -1,6 +1,10 @@
-# Design Graph Ontology v0.1
+# Design Graph Ontology
 
-The v0.1 ontology is deliberately small. Expand it only when repeated eval failures demonstrate a missing concept.
+Version 0.6. The node and relation sets are unchanged since v0.1 and are
+deliberately small. Expand them only when repeated eval failures
+demonstrate a missing concept. Rules added since v0.1 are marked with the
+version that introduced them; `scripts/lint_graph.py` enforces the ones
+that are checkable.
 
 ## Node types
 

@@ -61,7 +61,8 @@ Use `unresolved` when one of these is relevant.
 
 ## Confidence guidance
 
-Use confidence consistently:
+Use confidence consistently. `scripts/lint_graph.py` rejects inferred items
+below 0.55 and warns between 0.55 and 0.74.
 
 - `1.00` — direct observed/declared fact.
 - `0.90–0.99` — extremely strong inference with little plausible alternative.

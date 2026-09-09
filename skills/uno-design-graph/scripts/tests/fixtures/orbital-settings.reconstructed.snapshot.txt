@@ -1,0 +1,23 @@
+@ Presentation/SettingsPage.xaml ^0  (Page, dc:SettingsViewModel)
+  Grid ^1 :12
+    @ Controls/PageHeader.xaml ^2 :14  (UserControl)
+      Grid ^3 :9
+        Image ^4 :11
+        Button ^5 :15 [i]
+    ScrollViewer ^6 :20 [c]
+      StackPanel ^7 :22
+        Border ^8 #ProfileSection :24
+          StackPanel ^9 :26
+            TextBox ^10 #UsernameBox :28 [v] Text={Username,2way}
+            Button ^11 #SaveUsernameButton :31 [i]  "Save"
+        Border ^12 :36
+          StackPanel ^13 :38
+            TextBlock ^14 :40  "ABOUT"
+            Grid ^15 :43
+              TextBlock ^16 :45  "Platform"
+              TextBlock ^17 :46 Text={PlatformInfo}
+            Grid ^18 :50 dc:AboutRow o:.5 xf @@16,412,328,24
+              TextBlock ^19 :52  "Version"
+        lib:ContentPresenter ^20  !lib
+        Border ^21 :58 #status-message !hidden
+        Rectangle ^22  !code
