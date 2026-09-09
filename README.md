@@ -57,6 +57,17 @@ Run the whole suite:
 python3 -m unittest discover -s skills/uno-design-graph/scripts/tests
 ```
 
+## Inspect a graph visually
+
+[`tools/graph-inspector.html`](tools/graph-inspector.html) is a single-file
+node-graph viewer with no dependencies. Open it in a browser: it ships with
+the example graph loaded, and takes any `.graph.json` by file picker or
+paste. The containment tree reads top-down, states sit on the left, tokens
+on the right, canonical components below; inferred nodes have dashed
+borders, nodes touched by an `unresolved` item carry a marker, and the
+inspector shows evidence, the Uno mapping layer, and edges for the selected
+node.
+
 ## What a graph looks like
 
 [`examples/orbital-settings.graph.json`](examples/orbital-settings.graph.json)
