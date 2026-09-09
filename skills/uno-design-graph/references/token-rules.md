@@ -53,6 +53,17 @@ the edge documents exactly that override).
 
 ## Naming
 
+When the source is an Uno.Themes-based app, derive ids from the declared
+theme keys and keep the exact key in `uno.resourceKey`:
+
+| Declared key | Token id | `uno.resourceKey` |
+|---|---|---|
+| `Radius200CornerRadius` | `token.radius.200` | `Radius200CornerRadius` |
+| `Space200` | `token.spacing.200` | `Space200` |
+| `BodyMediumFontSize` | `token.typography.body-medium` | `BodyMediumFontSize` |
+| `TypefaceBrand` | `token.typography.brand` | `TypefaceBrand` |
+| `PrimaryBrush` | `token.color.primary` | `PrimaryBrush` |
+
 Prefer declared semantic names:
 
 `token.color.brand-primary`

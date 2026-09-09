@@ -17,9 +17,15 @@ Rules:
 7. Do not silently resolve `unresolved` items unless implementation requires a choice. If required, document the assumption.
 8. Keep implementation-specific details out of the Design Graph unless separately producing an implementation mapping artifact.
 
-9. When the target framework is Uno Platform and an Uno docs MCP server is
+9. When the target framework is Uno Platform and the Uno docs MCP server is
    available, initialize its usage rules (`uno_platform_usage_rules_init`)
-   and ground framework idioms via `uno_platform_docs_search` — style/resource
-   discipline, control choice, theming. See `docs/uno-mcp-integration.md`.
+   and ground framework idioms via `uno_platform_docs_search`: style and
+   resource discipline, control choice, theming. Use it for framework
+   idioms only; the graph stays the source of truth for structure, states,
+   tokens, and identifiers.
+10. After implementing, verify the round trip: build a graph from the
+    running app (`references/runtime-source.md`) and run
+    `scripts/diff_graph.py <design graph> <runtime graph>`. Any `changed`
+    or `missing` identity is a defect to fix before handing back.
 
 For A/B evaluation, use the same model, target framework, design input, and implementation instructions as the direct-design baseline. The only changed variable should be the presence of the Design Graph. Tooling access (including docs MCP servers) must be identical across arms.

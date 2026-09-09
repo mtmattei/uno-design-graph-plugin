@@ -1,10 +1,15 @@
 # Skill: Generate Design Graph
 
-Version: 0.4 (0.2 added a binding ID grammar, state-altitude rules, and token
-scoping; 0.3 added canonical-internals, token-edge attachment, and
-variant-folding rules; 0.4 makes the graph **Uno-first** — every node may
-carry a `properties.uno` mapping layer per `references/uno-mapping.md`. See
-CHANGELOG.)
+Version: 0.6 / schema 0.2.0. (0.2 added a binding ID grammar, state-altitude
+rules, and token scoping; 0.3 added canonical-internals, token-edge
+attachment, and variant-folding rules; 0.4 made the graph **Uno-first** with
+a `properties.uno` mapping layer per `references/uno-mapping.md`; 0.5 added
+the condition-vs-presentation and trigger-attachment rules; 0.6 types the
+Uno layer in the schema, enforces the binding rules in `scripts/lint_graph.py`,
+and adds the design-system graph kind. See `CHANGELOG.md`.)
+
+Every rule marked **binding** below is checked by `scripts/lint_graph.py`.
+A graph is not finished until validate and lint both pass.
 
 ## Target framework
 
@@ -55,9 +60,25 @@ Produce one JSON document conforming to:
 
 `schema/design-graph.schema.json`
 
-Default filename:
+Declare `"schemaVersion": "0.2.0"` so the typed Uno mapping layer is
+enforced. Default filename: `<name>.graph.json`.
 
-`design.graph.json`
+## Graph kinds
+
+`metadata.kind` selects the profile:
+
+- `screen` (default): one screen and what it consumes. Tokens are limited
+  to values the surface actually uses (Pass 5).
+- `design-system`: the theme's token and style inventory, with no screen
+  required. Token nodes may have no consumer. Derive token ids from the
+  declared resource keys and keep the exact key in `uno.resourceKey`;
+  for Uno.Themes the keys follow fixed patterns (`Space200`,
+  `Radius200CornerRadius`, `BodyMediumFontSize`, `TypefaceBrand`), so
+  `Radius200CornerRadius` becomes `token.radius.200` and
+  `BodyMediumFontSize` becomes `token.typography.body-medium`.
+
+A screen graph references a design-system graph's tokens by id; it does
+not copy the inventory.
 
 Do not wrap the JSON in explanatory prose if the caller asks for a file or machine-readable result.
 
@@ -295,17 +316,21 @@ Use the top-level `unresolved` array when:
 
 A correct unresolved item is better than a confident hallucination.
 
-### Pass 10: Validate
+### Pass 10: Validate and lint
 
-Before returning:
+Before returning, run both scripts and fix until both pass:
 
-1. validate against the JSON Schema;
-2. ensure every edge `from` and `to` references an existing node;
-3. ensure node IDs are unique;
-4. ensure no duplicate edges exist;
-5. ensure every inferred item has confidence and rationale;
-6. ensure no unsupported behavior was invented;
-7. ensure repeated patterns were considered for component consolidation.
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/validate_graph.py <file>
+python3 ${CLAUDE_SKILL_DIR}/scripts/lint_graph.py <file>
+```
+
+`validate_graph.py` checks the schema, unique ids, resolvable edges, no
+duplicate edges, and rationale on every inference. `lint_graph.py` checks
+the binding rules: ID grammar, relation domains, token-edge attachment,
+state altitude, confidence thresholds, behavior-edge evidence, token scope,
+unattached states, and `unresolved.relatedIds`. Warnings are judgment
+calls; read each one and either fix it or leave it knowingly.
 
 ## Quality priorities
 
