@@ -1,0 +1,619 @@
+{
+  "schemaVersion": "0.2.0",
+  "graphId": "orbital-settings",
+  "name": "Orbital Settings",
+  "description": "Abridged from the eval-05 gold graph in the Design Graph Kit (65 nodes, 96 edges). Every control type, x:Name, and style key here is one the kit's docs cite verbatim from the Orbital source; the three ABOUT rows other than Platform and the dialog are omitted.",
+  "sourceSummary": [
+    {
+      "type": "xaml",
+      "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+    },
+    {
+      "type": "csharp",
+      "path": "Orbital/Orbital/Presentation/SettingsPage.xaml.cs"
+    },
+    {
+      "type": "design-system",
+      "label": "Orbital Styles/*.xaml"
+    }
+  ],
+  "metadata": {
+    "kind": "screen",
+    "kit": "https://github.com/mtmattei/Uno-Builds/tree/main/design-graph-kit/evals/05-orbital-settings"
+  },
+  "nodes": [
+    {
+      "id": "screen.settings",
+      "type": "screen",
+      "name": "Settings",
+      "properties": {
+        "uno": {
+          "type": "Page",
+          "class": "Orbital.Presentation.SettingsPage"
+        }
+      },
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "id": "component.page-header",
+      "type": "component",
+      "name": "Page header",
+      "role": "header",
+      "properties": {
+        "uno": {
+          "type": "UserControl",
+          "class": "Orbital.Controls.PageHeader"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        },
+        "rationale": "Referenced UserControl; expanded per method.md Mode 1 step 2."
+      }
+    },
+    {
+      "id": "asset.header.logo",
+      "type": "asset",
+      "name": "Uno logo",
+      "role": "logo",
+      "properties": {
+        "uno": {
+          "type": "Image",
+          "source": "ms-appx:///Assets/Icons/Uno-logo.png"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "label": "Orbital.Controls.PageHeader"
+        }
+      }
+    },
+    {
+      "id": "control.header.search",
+      "type": "control",
+      "name": "Search",
+      "role": "button",
+      "semanticRole": "searchInput",
+      "properties": {
+        "uno": {
+          "type": "Button"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "label": "Orbital.Controls.PageHeader"
+        },
+        "rationale": "Raises the static SearchRequested event; handler is outside the supplied source."
+      }
+    },
+    {
+      "id": "region.settings.content",
+      "type": "region",
+      "name": "Content",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "id": "component.settings-card",
+      "type": "component",
+      "name": "Settings card",
+      "role": "card",
+      "properties": {
+        "uno": {
+          "type": "Border",
+          "styleKey": "OrbitalCardStyle"
+        }
+      },
+      "evidence": {
+        "kind": "derived",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        },
+        "rationale": "Two bordered sections (PROFILE, ABOUT) share OrbitalCardStyle."
+      }
+    },
+    {
+      "id": "component.settings-card.profile",
+      "type": "component",
+      "name": "Profile",
+      "properties": {
+        "uno": {
+          "xName": "ProfileSection"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "id": "component.settings-card.about",
+      "type": "component",
+      "name": "About",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "id": "control.profile.username",
+      "type": "control",
+      "name": "Username",
+      "role": "textbox",
+      "properties": {
+        "uno": {
+          "type": "TextBox",
+          "xName": "UsernameBox"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        },
+        "rationale": "x:Name=UsernameBox."
+      }
+    },
+    {
+      "id": "control.profile.save",
+      "type": "control",
+      "name": "Save",
+      "role": "button",
+      "semanticRole": "primaryAction",
+      "properties": {
+        "uno": {
+          "type": "Button",
+          "styleKey": "OrbitalPrimaryButtonSm",
+          "xName": "SaveUsernameButton"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        },
+        "rationale": "x:Name=SaveUsernameButton, OrbitalPrimaryButtonSm (only high-emphasis action)."
+      }
+    },
+    {
+      "id": "content.about.section-title",
+      "type": "content",
+      "name": "ABOUT",
+      "text": "ABOUT",
+      "semanticRole": "sectionHeader",
+      "properties": {
+        "uno": {
+          "type": "TextBlock",
+          "styleKey": "OrbitalMonoSmall"
+        }
+      },
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "id": "component.info-row",
+      "type": "component",
+      "name": "Info row (label/value)",
+      "role": "keyValueRow",
+      "properties": {
+        "parts": [
+          "label",
+          "value"
+        ],
+        "uno": {
+          "type": "Grid"
+        }
+      },
+      "evidence": {
+        "kind": "derived",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        },
+        "rationale": "Four label/value grids with identical structure inside ABOUT."
+      }
+    },
+    {
+      "id": "component.info-row.platform",
+      "type": "component",
+      "name": "Platform",
+      "properties": {
+        "value": "{Binding PlatformInfo}"
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "id": "state.profile.saved",
+      "type": "state",
+      "name": "Saved",
+      "semanticRole": "confirmation",
+      "properties": {
+        "uno": {
+          "mechanism": "code-behind"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "csharp",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml.cs"
+        },
+        "rationale": "Save sets button content to 'Saved!' for 1.5s after SettingsService.SaveUsername."
+      }
+    },
+    {
+      "id": "state.settings.entering",
+      "type": "state",
+      "name": "Entering",
+      "properties": {
+        "uno": {
+          "mechanism": "code-behind",
+          "member": "AnimationHelper.FadeUp"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "csharp",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml.cs"
+        },
+        "rationale": "Page entrance runs AnimationHelper.FadeUp on load."
+      }
+    },
+    {
+      "id": "token.radius.12",
+      "type": "token",
+      "name": "12 radius",
+      "category": "radius",
+      "value": 12,
+      "properties": {
+        "unit": "px",
+        "uno": {
+          "styleKey": "OrbitalCardStyle",
+          "property": "CornerRadius"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "design-system",
+          "label": "Orbital Styles/*.xaml"
+        },
+        "rationale": "OrbitalCardStyle CornerRadius."
+      }
+    },
+    {
+      "id": "token.color.surface1",
+      "type": "token",
+      "name": "Surface 1",
+      "category": "color",
+      "properties": {
+        "uno": {
+          "resourceKey": "OrbitalSurface1Brush",
+          "resourceType": "SolidColorBrush"
+        }
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "design-system",
+          "label": "Orbital Styles/*.xaml"
+        },
+        "rationale": "OrbitalSurface1Brush, consumed through OrbitalCardStyle."
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "screen.settings",
+      "relation": "contains",
+      "to": "component.page-header",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.page-header",
+      "relation": "contains",
+      "to": "asset.header.logo",
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "label": "Orbital.Controls.PageHeader"
+        }
+      }
+    },
+    {
+      "from": "component.page-header",
+      "relation": "contains",
+      "to": "control.header.search",
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "label": "Orbital.Controls.PageHeader"
+        }
+      }
+    },
+    {
+      "from": "screen.settings",
+      "relation": "contains",
+      "to": "region.settings.content",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "region.settings.content",
+      "relation": "contains",
+      "to": "component.settings-card.profile",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "region.settings.content",
+      "relation": "contains",
+      "to": "component.settings-card.about",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card.profile",
+      "relation": "instance-of",
+      "to": "component.settings-card",
+      "evidence": {
+        "kind": "derived",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card.about",
+      "relation": "instance-of",
+      "to": "component.settings-card",
+      "evidence": {
+        "kind": "derived",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card.profile",
+      "relation": "contains",
+      "to": "control.profile.username",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card.profile",
+      "relation": "contains",
+      "to": "control.profile.save",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card.about",
+      "relation": "contains",
+      "to": "content.about.section-title",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card.about",
+      "relation": "contains",
+      "to": "component.info-row.platform",
+      "evidence": {
+        "kind": "observed",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.info-row.platform",
+      "relation": "instance-of",
+      "to": "component.info-row",
+      "evidence": {
+        "kind": "derived",
+        "confidence": 1.0,
+        "source": {
+          "type": "xaml",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card",
+      "relation": "uses-token",
+      "to": "token.radius.12",
+      "properties": {
+        "appliesTo": "cornerRadius"
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "design-system",
+          "label": "Orbital Styles/*.xaml"
+        }
+      }
+    },
+    {
+      "from": "component.settings-card",
+      "relation": "uses-token",
+      "to": "token.color.surface1",
+      "properties": {
+        "appliesTo": "background"
+      },
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "design-system",
+          "label": "Orbital Styles/*.xaml"
+        }
+      }
+    },
+    {
+      "from": "control.profile.save",
+      "relation": "triggers",
+      "to": "state.profile.saved",
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "csharp",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml.cs"
+        },
+        "rationale": "Save handler swaps content to 'Saved!' after persisting the name."
+      }
+    },
+    {
+      "from": "control.profile.save",
+      "relation": "has-state",
+      "to": "state.profile.saved",
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "csharp",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml.cs"
+        }
+      }
+    },
+    {
+      "from": "screen.settings",
+      "relation": "has-state",
+      "to": "state.settings.entering",
+      "evidence": {
+        "kind": "declared",
+        "confidence": 1.0,
+        "source": {
+          "type": "csharp",
+          "path": "Orbital/Orbital/Presentation/SettingsPage.xaml.cs"
+        }
+      }
+    }
+  ],
+  "unresolved": [
+    {
+      "id": "unresolved.header.search-target",
+      "question": "What UI does the header search / command palette open?",
+      "relatedIds": [
+        "control.header.search"
+      ],
+      "possibleValues": [
+        "global command palette",
+        "search overlay",
+        "unknown"
+      ],
+      "reason": "PageHeader raises a static SearchRequested event; the handler and resulting UI are outside the supplied source."
+    }
+  ]
+}

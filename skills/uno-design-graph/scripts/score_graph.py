@@ -11,7 +11,7 @@ import json
 import re
 from pathlib import Path
 
-SCORER_VERSION = "0.3.0"
+SCORER_VERSION = "0.4.0"
 
 
 def load(path: Path):
@@ -76,18 +76,42 @@ def unresolved_signature(u):
     # prose. Two runs that flag the same ambiguity always word the question
     # differently, and exact question matching scored semantically identical
     # unresolved items at 0.0 in repeated runs.
-    return tuple(sorted(u.get("relatedIds", [])))
+    return frozenset(u.get("relatedIds", []))
+
+
+def unresolved_f1(gold_items, pred_items):
+    """Overlap-based matching (v0.4): a generated unresolved item matches a
+    gold item when their relatedIds intersect, greedily one-to-one. Exact
+    tuple matching (v0.3) scored 0.0 as soon as one related id drifted."""
+    gold = [unresolved_signature(u) for u in gold_items if isinstance(u, dict)]
+    pred = [unresolved_signature(u) for u in pred_items if isinstance(u, dict)]
+    if not gold and not pred:
+        return 1.0, 1.0, 1.0, 0, 0
+    unmatched = list(gold)
+    hits = 0
+    for p in pred:
+        for i, g in enumerate(unmatched):
+            if p & g:
+                hits += 1
+                unmatched.pop(i)
+                break
+    precision = hits / len(pred) if pred else 0.0
+    recall = hits / len(gold) if gold else 1.0
+    score = (2 * precision * recall / (precision + recall)) if (precision + recall) else 0.0
+    return precision, recall, score, len(gold), len(pred)
 
 
 def round4(x):
     return round(float(x), 4)
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("gold", type=Path)
     parser.add_argument("generated", type=Path)
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+    parser.add_argument("--fail-on-hallucination", action="store_true",
+                        help="Exit 1 when the generated graph has behavior edges gold does not support")
     args = parser.parse_args()
 
     gold = load(args.gold)
@@ -116,10 +140,6 @@ def main():
             {edge_signature(e) for e in gold.get("edges", [])},
             {edge_signature(e) for e in pred.get("edges", [])},
         ),
-        "unresolved": (
-            {unresolved_signature(u) for u in gold.get("unresolved", [])},
-            {unresolved_signature(u) for u in pred.get("unresolved", [])},
-        ),
     }
 
     f1s = []
@@ -133,6 +153,13 @@ def main():
             "generated_count": len(p),
         }
         f1s.append(score)
+
+    u_p, u_r, u_f1, u_gold, u_pred = unresolved_f1(gold.get("unresolved", []), pred.get("unresolved", []))
+    metrics["unresolved"] = {
+        "precision": round4(u_p), "recall": round4(u_r), "f1": round4(u_f1),
+        "gold_count": u_gold, "generated_count": u_pred,
+    }
+    f1s.append(u_f1)
 
     metrics["macro_f1"] = round4(sum(f1s) / len(f1s))
 
@@ -197,6 +224,10 @@ def main():
             for edge in unsupported_behavior:
                 print("  -", edge)
 
+    if args.fail_on_hallucination and unsupported_behavior:
+        return 1
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
